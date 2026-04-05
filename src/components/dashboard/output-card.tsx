@@ -1,29 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
+const WATERMARK = "\n\n---\nMade with RepurposeBot (repurposebot.com)";
+
 interface OutputCardProps {
   platform: string;
   content: string;
+  isFree?: boolean;
 }
 
-export function OutputCard({ platform, content }: OutputCardProps) {
+export function OutputCard({ platform, content, isFree = true }: OutputCardProps) {
   const [copied, setCopied] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Reset edited content when content changes (new generation)
-  if (content !== editedContent && !isEditing) {
+  // Reset edited content when content prop changes (new generation)
+  useEffect(() => {
     setEditedContent(content);
-  }
+    setIsEditing(false);
+  }, [content]);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(editedContent);
+    const textToCopy = isFree ? editedContent + WATERMARK : editedContent;
+    await navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -70,6 +75,12 @@ export function OutputCard({ platform, content }: OutputCardProps) {
           <div className="whitespace-pre-wrap text-sm leading-relaxed rounded-lg bg-muted p-4">
             {editedContent || "No content generated for this platform."}
           </div>
+        )}
+        {isFree && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Free tier: copied text includes &quot;Made with RepurposeBot&quot;
+            watermark. Upgrade to remove.
+          </p>
         )}
       </CardContent>
     </Card>
